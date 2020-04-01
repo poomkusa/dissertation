@@ -55,7 +55,7 @@ def draw_faces(filename, result_list):
 
 filename = 'test1.jpg'
 # load image from file
-pixels = pyplot.imread(filename)
+pixels = pyplot.imread("pic")
 # create the detector, using default weights
 detector = MTCNN()
 # detect faces in the image

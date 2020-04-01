@@ -97,7 +97,13 @@ y.index[y["country"].isnull() == True]
 x.to_pickle("/home/poom/Desktop/combine.pkl")
 pd.DataFrame(data=x.country.unique())
 
+
 import pickle
+
+outfile = open("/home/poom/Desktop/user_data.pkl", 'wb') # 'wb' instead 'w' for binary file
+pickle.dump(data, outfile)
+outfile.close()   
+
 infile = open("/home/poom/Desktop/dogs",'rb')
-new_dict = pickle.load(infile)
+data = pickle.load(infile)
 infile.close()

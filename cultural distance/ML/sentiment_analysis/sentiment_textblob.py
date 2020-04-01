@@ -9,7 +9,6 @@ Created on Sat Mar 28 20:00:11 2020
 # =============================================================================
 # https://github.com/sloria/TextBlob
 # https://github.com/thisandagain/sentiment
-# https://pypi.org/project/cld2-cffi/
 # =============================================================================
 
 import pandas as pd
