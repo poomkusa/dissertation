@@ -13,10 +13,9 @@ Created on Sat Mar 28 20:00:11 2020
 
 import pandas as pd
 import langid
-import pycld2 as cld2
 import progressbar
 
-df = pd.read_pickle("/home/poom/Desktop/sentiment_old.pkl")
+df = pd.read_pickle("D:/PhD/Dissertation/airbnb/cultural distance/ML/nlp/sentiment.pkl")
 #df.to_pickle("/home/poom/Desktop/sentiment.pkl")
 df.comments.describe()
 df.index[df['comments'].isnull() == True]
