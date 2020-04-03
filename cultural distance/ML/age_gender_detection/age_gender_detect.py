@@ -35,6 +35,7 @@ from mtcnn.mtcnn import MTCNN
 import urllib.request
 from urllib.error import HTTPError
 import pandas as pd
+import numpy as np
 from matplotlib import pyplot as plt
 import progressbar
 data = pd.read_pickle("/home/poom/Desktop/combine.pkl")
@@ -165,9 +166,9 @@ facecascade = cv2.CascadeClassifier(faceHaar)
 ageNet=cv2.dnn.readNet(ageModel,ageProto)
 genderNet=cv2.dnn.readNet(genderModel,genderProto)
 
-data["face_num"] = None
-data["age"] = None
-data["gender"] = None
+data["face_num"] = np.nan
+data["age"] = np.nan
+data["gender"] = np.nan
 if single_pic==-1:
     with progressbar.ProgressBar(max_value=len(data)) as bar:
         for i in range(len(data)):
