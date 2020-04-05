@@ -38,7 +38,7 @@ import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
 import progressbar
-data = pd.read_pickle("/home/poom/Desktop/combine.pkl")
+data = pd.read_pickle("/home/poom/Desktop/20200402.pkl")
 #data = data.iloc[0:99]
 
 # =============================================================================
