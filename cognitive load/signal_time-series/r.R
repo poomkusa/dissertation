@@ -224,7 +224,8 @@ is.pbalanced(x, index = c("id","t"))
 #panel var should be factor
 library(plm)
 result$superhostxnum_reviews <- result$host_is_superhost*result$number_of_reviews
-fe <- plm(logit_perf ~ host_is_superhost + superhostxnum_reviews + host_listings_count + review_scores_location + number_of_reviews + price + bathrooms + bedrooms + avg_price_nbh + density_nbh,
+result$superhostxdensity <- result$host_is_superhost*result$density_nbh
+fe <- plm(logit_perf ~ host_is_superhost + superhostxnum_reviews + host_listings_count + review_scores_location + number_of_reviews + price + bathrooms + bedrooms,
           data = result,
           index = c("id", "t"),
           model = "within",
