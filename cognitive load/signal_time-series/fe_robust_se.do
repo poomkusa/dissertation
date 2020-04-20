@@ -1,0 +1,3 @@
+xtset id timevar
+xtdescribe
+xtscc logit_perf host_is_superhost superhostxnum_reviews host_listings_count review_scores_location number_of_reviews price bathrooms bedrooms, fe
