@@ -266,7 +266,7 @@ dta$city <- filename
 which(is.na(dta))
 result <- rbind(result, dta)
 save(result,file="/home/poom/Desktop/airbnb/final_data.Rda")
-load("/home/poom/Desktop/airbnb/final_data.Rda")
+load("C:/Users/ThisPC/Desktop/dissertation/cognitive load/info_overload_cross-sectional/final_data.Rda")
 ############################################################################
 ############################################################################
 
@@ -287,7 +287,9 @@ est <- lm(logit_perf ~ host_is_superhost + density_nbh + host_is_superhost*densi
           #number_of_reviews becomes insig if interact with review_scores_rating
           +review_scores_location+number_of_reviews
           
-          +price+bathrooms+bedrooms+beds+tv+wifi+ac+fridge+toiletry+accommodates+avg_price_nbh
+          +price+bathrooms+bedrooms
+          +beds+tv+wifi+ac+fridge+toiletry+accommodates+avg_price_nbh
+          
           
           # #if include, superhost will not be sig (cor=0.18,0.11,0.1,0.33)
           # #1) Host a minimum of 10 stays in a year
@@ -306,6 +308,11 @@ est <- lm(logit_perf ~ host_is_superhost + density_nbh + host_is_superhost*densi
           
           , data=x)
 summary(est)
+#fix heteroskedasticity
+library(sandwich)
+coeftest(est, type="HC3")
+#get F-test
+waldtest(est, vcov=vcovHC)
 
 temp=x[,5:27]
 temp$city <- NULL
@@ -323,3 +330,92 @@ tab_model(
   est, show.se = TRUE, show.std = TRUE, show.stat = TRUE,
   col.order = c("p", "stat", "est", "std.se", "se", "std.est")
 )
+
+###########################################################################################
+# check regression assumption
+###########################################################################################
+# library(dplyr)
+# library("lavaan")
+library(MASS)
+library(car)
+library(lmtest)
+library(caret)
+library(mctest)
+
+model <- est
+# Linearity of the data
+plot(model, which=1) #The red line should straight and horizontal, not curved
+crPlots(model) #Both red & green lines should be nice and linear
+# Outliers
+plot(model, 5) #data shouldnt cross Cook’s distance line
+plot(model, 4) #red line should be flat and horizontal with equally and randomly spread data points
+outlierTest(model) #sig=outlier exists
+# The mean of residuals is zero
+mean(model$residuals) #should be zero (or very close)
+# Normality of residuals
+plot(model, 2) #observations should lie well along the 45-degree line
+sresid <- studres(model) 
+hist(sresid, freq=FALSE)
+xfit <- seq(min(sresid),max(sresid),length=40) 
+yfit <- dnorm(xfit) 
+lines(xfit, yfit)
+shapiro.test(sresid) #sig=non-normal
+# Homoscedasticity
+plot(model, 3) #red line should be flat and horizontal with equally and randomly spread data points
+ncvTest(model) #sig=hetero
+bptest(model) #sig=hetero
+# Independence (Autocorrelation)
+durbinWatsonTest(model) #sig=auto
+# Multicollinearity 
+var_col <- dta[,c('self_esteem','brand_love','social_compare','distance','se_x_sc','se_x_sd')]
+corr <- round(cor(var_col),2)
+findCorrelation(corr, cutoff = 0.7, names = TRUE)
+vif(model) #>10 is not good (actually it depends on how much it inflates)
+omcdiag(as.matrix(var_col), dta$brand_jealous)
+imcdiag(var_col, dta$brand_jealous)
+# The X variables and residuals are uncorrelated
+cor.test(x$host_is_superhost, model$residuals) #sig=correlated
+
+###########################################################################################
+# prediction
+###########################################################################################
+library(caret)
+library(LaplacesDemon)
+library("ggplot2")
+transform_to_num_booked_days <- function(logit) {
+  percent <- invlogit(logit)
+  num_booked_days <- percent*30
+  return(num_booked_days)
+}
+
+sampling <- x
+sampling$sampling <- "a"
+trainIndex <- createDataPartition(sampling$sampling, p=2/3, list=FALSE)
+train <- sampling[trainIndex,]
+test <- sampling[-trainIndex,]
+est <- lm(logit_perf ~ host_is_superhost + density_nbh + host_is_superhost*density_nbh
+          +host_listings_count
+          +review_scores_location+number_of_reviews
+          +price+bathrooms+bedrooms
+          , data=train)
+summary(est)
+yhat <- predict(est, newdata=test, interval="prediction")
+yhat <- as.data.frame(yhat)
+yhat$actual <- test$logit_perf
+# yhat$fit = transform_to_num_booked_days(yhat$fit)
+# yhat$lwr = transform_to_num_booked_days(yhat$lwr)
+# yhat$upr = transform_to_num_booked_days(yhat$upr)
+# yhat$actual = transform_to_num_booked_days(yhat$actual)
+yhat <- yhat[order(yhat$actual), ]
+rownames(yhat)=NULL
+yhat$idu <- as.numeric(row.names(yhat))
+p <- ggplot(yhat, aes(x=idu, y=actual)) +
+  geom_point() +
+  geom_line(aes(y=fit), color="blue") +
+  geom_line(aes(y=lwr), color="red", linetype="dashed") +
+  geom_line(aes(y=upr), color="red", linetype="dashed")
+p
+sum((yhat$actual<yhat$upr & yhat$actual>yhat$lwr), na.rm = TRUE)/nrow(yhat)
+
+temp = yhat
+yhat = temp[4500:5000,]

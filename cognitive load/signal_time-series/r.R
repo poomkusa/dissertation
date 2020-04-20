@@ -211,7 +211,7 @@ result$neighborhood <- NULL
 rm(freq_neighborhood, avg_price_neighborhood, freq_price, temp)
 
 save(result, file="/media/poom/Backup/PhD/Dissertation/airbnb/cognitive load/2-time_series/final_more_var.Rda")
-load("/media/poom/Backup/PhD/Dissertation/airbnb/cognitive load/2-time_series/final_more_var.Rda")
+load("D:/PhD/Dissertation/airbnb/cognitive load/2-time_series/final_more_var.Rda")
 #########################################################################################
 
 #balance panel data
@@ -232,14 +232,37 @@ fe <- plm(logit_perf ~ host_is_superhost + superhostxnum_reviews + host_listings
           effect = "twoways")
 summary(fe)
 fixef(fe) # Display the fixed effects (constants for each country)
-pcdtest(fe, test = c("lm")) # Testing for cross-sectional dependence, sig -> there is
-library(lmtest) # Testing for heteroskedasticity, sig -> hetero
-bptest(perf30 ~ host_is_superhost + factor(id) + factor(t), data = result, studentize=F)
-pbgtest(fe) # Testing for serial correlation, sig -> there is
-library(tseries) # test for stationarity, sig -> stationary
-adf.test(result$perf30, k=2)
-library(car)
-scatterplot(perf30~t|id, boxplots=FALSE, smooth=TRUE, reg.line=FALSE, data=result)
 
+#random effect
+re <- plm(logit_perf ~ host_is_superhost + superhostxnum_reviews + host_listings_count + review_scores_location + number_of_reviews + price + bathrooms + bedrooms,
+          data = result,
+          index = c("id", "t"),
+          model = "random",
+          effect = "twoways")
+# Choose between Fixed or Random: Hausman test
+phtest(fe, re) #sig=use fe
+# Testing for individual/time-fixed effects
+plmtest(fe, c("individual"), type=("bp")) #sig=should use individual fixed effect
+plmtest(fe, c("time"), type=("bp")) #sig=should use time fixed effect
+# Testing for cross-sectional dependence
+pcdtest(fe, test=c("lm")) #sig=there is
+# Testing for heteroskedasticity
 library(lmtest)
-coeftest(fe, vcov = vcovHC, type = "HC1")
+bptest(logit_perf ~ host_is_superhost + factor(id), data=result, studentize=F) #sig=hetero
+# Testing for serial correlation
+pbgtest(fe) #sig=there is
+# test for stationarity
+library(tseries)
+adf.test(result$logit_perf, k=2) #sig=stationary
+# Robust covariance matrix estimation
+library(lmtest)
+coeftest(fe, vcovHC(fe, method="arellano"))
+coeftest(fe, vcovHAC(fe))
+
+############################################################################
+#create time var
+result$y <- as.numeric(substr(result$t,1,4))
+result$m <- as.numeric(substr(result$t,5,6))
+result$timevar <- result$m-3 + (result$y-2016)*12
+#export to stata
+write_dta(result, "C:/Users/ThisPC/Desktop/stata.dta")
