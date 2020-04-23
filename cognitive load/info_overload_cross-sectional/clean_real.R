@@ -288,7 +288,7 @@ est <- lm(logit_perf ~ host_is_superhost + density_nbh + host_is_superhost*densi
           +review_scores_location+number_of_reviews
           
           +price+bathrooms+bedrooms
-          +beds+tv+wifi+ac+fridge+toiletry+accommodates+avg_price_nbh
+          +beds+tv+wifi+ac+fridge+toiletry+accommodates
           
           
           # #if include, superhost will not be sig (cor=0.18,0.11,0.1,0.33)
