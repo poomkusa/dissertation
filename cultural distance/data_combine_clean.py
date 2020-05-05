@@ -111,11 +111,65 @@ for i in range(len(data)):
     if hofstede.iloc[hofstede.index[hofstede['country']==data.country[i]], 7].values[0] == 4:
         data.cult_dst_4[i] = cult_dst (data.country[i], 4)
 #remove rows with nan in both cult_dst columns
-indexNames = data[ (data['cult_dst_4'].isnull()) & (data['cult_dst_4'].isnull()) ].index
+indexNames = data[ (data['cult_dst_4'].isnull()) & (data['cult_dst_6'].isnull()) ].index
 data.drop(indexNames , inplace=True)
 data.isna().any()
-# data.to_pickle("/home/poom/Desktop/PhD/Dissertation/airbnb/cultural distance/w_age_20200402.pkl")
-            
+# data.to_pickle("/home/poom/Desktop/PhD/Dissertation/airbnb/cultural distance/data.pkl")
+ 
+# =============================================================================
+# NLP
+# =============================================================================
+from textblob import TextBlob
+#from textblob.sentiments import NaiveBayesAnalyzer
+import progressbar
+import random
+from time import sleep
+data = pd.read_pickle("/home/poom/Desktop/PhD/Dissertation/airbnb/cultural distance/data.pkl")
+data.isna().any()
+
+#remove rows with unwanted comments
+data['comments'].isnull().sum()
+mask = data['comments'].str.len()==1
+freq = data.loc[mask]
+freq = freq['comments'].value_counts(dropna=False)
+indexNames = data[ (data['comments'].str.len()==1) | (data['comments']=='...') | (data['comments']=='..') | (data['comments']=='. ') | (data['comments']=='N/a') | (data['comments']=='*****') ].index
+data.drop(indexNames , inplace=True)
+
+#language detection ensemble
+data.reset_index(inplace=True, drop=True )
+data['langEnsemble'] = np.nan
+data['langdetect'] = np.where(data['langdetect'].str.contains('zh', na=False), 'zh', data['langdetect'])
+data['cld2'] = np.where(data['cld2'].str.contains('zh', na=False), 'zh', data['cld2'])
+for i in range(len(data)):
+    if data.langdetect[i] == data.langid[i]:
+        data.langEnsemble[i] = data.langdetect[i]
+    elif data.langdetect[i] == data.cld2[i]:
+        data.langEnsemble[i] = data.langdetect[i]
+    elif data.langid[i] == data.cld2[i]:
+        data.langEnsemble[i] = data.langid[i]
+mask = data['comments'].str.len()==1
+freq = data['langEnsemble'].value_counts(dropna=False)
+mask = data['langEnsemble'].isnull()
+freq2 = data.loc[mask]
+indexNames = data[ (data['langEnsemble'].isnull()) ].index
+data.drop(indexNames , inplace=True)
+data.reset_index(inplace=True, drop=True )
+#translate
+#add progress, save in loop
+data['translation'] = np.nan
+with progressbar.ProgressBar(max_value=len(data)) as bar:
+    for i in range(len(data)):
+        bar.update(i)
+        if data.langEnsemble[i].isnull():
+            blob = TextBlob(data.comments[i])
+            data['translation'] = blob.translate(to='en')
+            if i%10==0:
+                data.to_pickle("/home/poom/Desktop/data_nlp.pkl")
+            sleep(0.5) 
+data['translation'] = np.where(data['translation'].isnull(), data['comments'], data['translation'])
+
+data.to_pickle("/home/poom/Desktop/PhD/Dissertation/airbnb/cultural distance/data_nlp.pkl")
+
 # =============================================================================
 # combine listing level and review level data
 # =============================================================================
