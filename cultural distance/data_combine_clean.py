@@ -184,6 +184,23 @@ with progressbar.ProgressBar(max_value=len(data)) as bar:
 sum(~(data['langEnsemble']=='en') & data['translation'].isnull())
 data['translation'] = np.where(data['translation'].isnull(), data['comments'], data['translation'])
 
+#sentiment analysis
+data['sentiment_pl'] = np.nan
+data['sentiment_sj'] = np.nan
+with progressbar.ProgressBar(max_value=len(data)) as bar:
+    for i in range(14000, len(data)):
+        bar.update(i)
+        if data.langEnsemble[i] != 'en':
+            blob = TextBlob(data.translation[i])
+            data.sentiment_pl[i] = blob.sentiment.polarity
+            data.sentiment_sj[i] = blob.sentiment.subjectivity
+        if i%1000==0:
+            data.to_pickle("/home/poom/Desktop/data_nlp.pkl")
+data['sentiment_pl'] = np.where(data['sentiment_pl'].isnull(), data['polarity'], data['sentiment_pl'])
+data['sentiment_sj'] = np.where(data['sentiment_sj'].isnull(), data['subjectivity'], data['sentiment_sj'])
+del data['polarity']
+del data['subjectivity']
+
 data.to_pickle("/home/poom/Desktop/PhD/Dissertation/airbnb/cultural distance/data_nlp.pkl")
 
 # =============================================================================
