@@ -153,19 +153,35 @@ mask = data['langEnsemble'].isnull()
 freq2 = data.loc[mask]
 indexNames = data[ (data['langEnsemble'].isnull()) ].index
 data.drop(indexNames , inplace=True)
-data.reset_index(inplace=True, drop=True )
+
 #translate
-#add progress, save in loop
+data.reset_index(inplace=True, drop=True )
+from google.cloud import translate_v2 as translate
+import argparse
+import six
+translate_client = translate.Client()
+mask = data['langEnsemble'] != 'en'
+foreign = data.loc[mask]
+foreign['char_count'] = foreign['comments'].str.len()
+sum(foreign['char_count'])
 data['translation'] = np.nan
 with progressbar.ProgressBar(max_value=len(data)) as bar:
-    for i in range(len(data)):
+    for i in range(344208, len(data)):
         bar.update(i)
-        if data.langEnsemble[i].isnull():
-            blob = TextBlob(data.comments[i])
-            data['translation'] = blob.translate(to='en')
-            if i%10==0:
-                data.to_pickle("/home/poom/Desktop/data_nlp.pkl")
-            sleep(0.5) 
+        if data.langEnsemble[i] != 'en':
+#            #using textblob
+#            blob = TextBlob(data.comments[i])
+#            data.translation[i] = blob.translate(to='en').string
+            text = data.comments[i]
+            if isinstance(text, six.binary_type):
+                text = text.decode('utf-8')
+            result = translate_client.translate(text, target_language='en')
+            data.translation[i] = result['translatedText']
+            sleep(0.2) 
+            print(data.translation[i])
+        if i%1000==0:
+            data.to_pickle("/home/poom/Desktop/data_nlp.pkl")
+sum(~(data['langEnsemble']=='en') & data['translation'].isnull())
 data['translation'] = np.where(data['translation'].isnull(), data['comments'], data['translation'])
 
 data.to_pickle("/home/poom/Desktop/PhD/Dissertation/airbnb/cultural distance/data_nlp.pkl")
