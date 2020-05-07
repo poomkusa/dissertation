@@ -20,11 +20,19 @@ Created on Sun Mar 29 20:41:12 2020
 # https://www.kaggle.com/timesler/guide-to-mtcnn-in-facenet-pytorch
 # https://awesomeopensource.com/project/timesler/facenet-pytorch
 
+# preprocessing
+# https://www.pyimagesearch.com/2017/12/04/how-to-create-a-deep-learning-dataset-using-google-images/
+
 # face alignment
 # https://medium.com/@Intellica.AI/a-guide-for-building-your-own-face-detection-recognition-system-910560fe3eb7
 
 # Rank-consistent Ordinal Regression for Neural Networks
 # https://paperswithcode.com/paper/consistent-rank-logits-for-ordinal-regression#code
+
+# Deep EXpectation of apparent age
+# https://data.vision.ee.ethz.ch/cvl/rrothe/imdb-wiki/
+# https://github.com/serengil/deepface
+
 
 # race recognition
 # https://github.com/HectorAnadon/Face-expression-and-ethnic-recognition

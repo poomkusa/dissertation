@@ -218,6 +218,7 @@ for (columnName, columnData) in df.iteritems():
 data=data.rename(columns = {'id':'review_id'})
 reg_dta = pd.merge(left=data, right=df, left_on='listing_id', right_on='id')
 # found duplicate reviews, they are the same house but have different listing id
+# some reviews are automated message when host cancel the booking
 # temp.to_pickle("/home/poom/Desktop/PhD/Dissertation/airbnb/cultural distance/data_final.pkl")
 
 #listing level merge

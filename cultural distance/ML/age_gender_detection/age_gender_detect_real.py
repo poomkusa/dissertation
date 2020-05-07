@@ -5,30 +5,6 @@ Created on Sun Mar 29 20:41:12 2020
 
 @author: poom
 """
-# =============================================================================
-# Haar Cascades + Levi and Hassner (2015)
-# https://towardsdatascience.com/predict-age-and-gender-using-convolutional-neural-network-and-opencv-fd90390e3ce6
-# https://www.learnopencv.com/age-gender-classification-using-opencv-deep-learning-c-python/
-# https://data-flair.training/blogs/python-project-gender-age-detection/
-
-# MTCNN
-# http://www.programmersought.com/article/2837770080/
-# https://machinelearningmastery.com/how-to-perform-face-detection-with-classical-and-deep-learning-methods-in-python-with-keras/
-# https://pypi.org/project/torch-mtcnn/
-# https://github.com/timesler/facenet-pytorch
-# https://github.com/YYuanAnyVision/mxnet_mtcnn_face_detection
-# https://www.kaggle.com/timesler/guide-to-mtcnn-in-facenet-pytorch
-# https://awesomeopensource.com/project/timesler/facenet-pytorch
-
-# face alignment
-# https://medium.com/@Intellica.AI/a-guide-for-building-your-own-face-detection-recognition-system-910560fe3eb7
-
-# Rank-consistent Ordinal Regression for Neural Networks
-# https://paperswithcode.com/paper/consistent-rank-logits-for-ordinal-regression#code
-
-# race recognition
-# https://github.com/HectorAnadon/Face-expression-and-ethnic-recognition
-# =============================================================================
 
 import cv2
 from mtcnn.mtcnn import MTCNN
