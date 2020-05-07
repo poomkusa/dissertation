@@ -14,6 +14,7 @@ import pandas as pd
 import numpy as np
 import progressbar
 data = pd.read_pickle("/home/poom/Desktop/PhD/Dissertation/airbnb/cultural distance/data.pkl")
+data = data[['listing_id', 'id', 'pic']]
 #data = data.iloc[0:99]
 
 # =============================================================================
@@ -23,6 +24,13 @@ data = pd.read_pickle("/home/poom/Desktop/PhD/Dissertation/airbnb/cultural dista
 #https://machinelearningmastery.com/how-to-perform-face-detection-with-classical-and-deep-learning-methods-in-python-with-keras/
 #https://www.bogotobogo.com/python/OpenCV_Python/python_opencv3_Image_Object_Detection_Face_Detection_Haar_Cascade_Classifiers.php
 # =============================================================================
+
+def url_to_image(url):
+	# download the image, convert it to a NumPy array, and then read it into OpenCV format
+	resp = urllib.request.urlopen(url)
+	image = np.asarray(bytearray(resp.read()), dtype="uint8")
+	image = cv2.imdecode(image, cv2.IMREAD_COLOR)
+	return image
 
 def detect_face_mtcnn(frame):
     imgtest1 = frame.copy()
@@ -35,8 +43,8 @@ def detect_face_mtcnn(frame):
     
     faceBoxes=[]
     points=[]
-    noseList=[]
-    confidenceList=[]
+    if(len(resultList)!=1):
+        return len(resultList), faceBoxes, points
     # plot each box
     for face in resultList:
         # draw the box
@@ -47,28 +55,24 @@ def detect_face_mtcnn(frame):
         y2=y+height
         faceBoxes.append([x1,y1,x2,y2])
         points.append(face['keypoints'])
-        noseList.append(face['keypoints']['nose'])
-        confidenceList.append(face['confidence'])
-    return faceBoxes, points, noseList, confidenceList
+    return len(resultList), faceBoxes, points
     
-def analyze_pic():
-    frame = cv2.imread('pic') #import pic from the local folder
+def analyze_pic(url):
+    frame = url_to_image(url) #import pic from the local folder
     #get box coordination locating faces
-    faceBoxes, points, noseList, confidenceList = detect_face_mtcnn(frame)
+    face_num, faceBoxes, points = detect_face_mtcnn(frame)
 
     gender_ret = []
     age_ret = [] 
-    agePreds=np.nan
     genderPreds=np.nan
+    agePreds=np.nan
     #predict only when theres only one face in the pic
-    if (len(faceBoxes)==1):
-        for faceBox, nose in zip(faceBoxes, noseList):
-            #crop only the face part
-            half_size = int( ( (faceBox[3]-faceBox[1])*1.2 )/2 )
-            face=frame[max(0,nose[1]-half_size):
-                       min(nose[1]+half_size,frame.shape[0]-1),max(0,nose[0]-half_size)
-                       :min(nose[0]+half_size, frame.shape[1]-1)]
-    
+    if (face_num==1):
+        #crop only the face part
+        for faceBox in faceBoxes:
+            face = frame[max(0,faceBox[1]-padding):min(faceBox[3]+padding,frame.shape[0]-1),
+                         max(0,faceBox[0]-padding):min(faceBox[2]+padding, frame.shape[1]-1)]
+            
             #preprocessing
             blob=cv2.dnn.blobFromImage(face, 1.0, (227,227), MODEL_MEAN_VALUES, swapRB=False)
             
@@ -81,7 +85,7 @@ def analyze_pic():
             agePreds=ageNet.forward()
             age=ageList[agePreds[0].argmax()]
             age_ret.append(age)
-    return len(faceBoxes), age_ret, gender_ret, agePreds, genderPreds, faceBoxes, points
+    return frame, face_num, age_ret, gender_ret, agePreds, genderPreds, faceBoxes, points
 
 #initialize ML var
 faceHaar="/home/poom/Desktop/haarcascade_frontalface_default.xml"
@@ -98,6 +102,7 @@ facecascade = cv2.CascadeClassifier(faceHaar)
 ageNet=cv2.dnn.readNet(ageModel,ageProto)
 genderNet=cv2.dnn.readNet(genderModel,genderProto)
 
+data["image"] = ""
 data["face_num"] = np.nan
 data["age"] = np.nan
 data["gender"] = np.nan
@@ -105,28 +110,35 @@ data["age_conf"] = ""
 data["gender_conf"] = ""
 data["face"] = ""
 data["points"] = ""
+padding=20
 with progressbar.ProgressBar(max_value=len(data)) as bar:
     for i in range(len(data)):
         bar.update(i)
         #skip if the user profile page no longer exists
         if(str(data.iloc[i,data.columns.get_loc("pic")])=="nan"):
             continue
+        #skip if there's no profile pic
+        if(data.pic[i]=="https://a0.muscache.com/defaults/user_pic-225x225.png?v=3"):
+            continue
         try:
-            #save pic from the website into local folder
-            pic = urllib.request.urlretrieve(data.iloc[i,data.columns.get_loc("pic")], "pic")
-            face_ret, age_ret, gender_ret, agePreds, genderPreds, faceBoxes, points = analyze_pic()
-            data.face_num[i] = face_ret
+            image, face_ret, age_ret, gender_ret, agePreds, genderPreds, faceBoxes, points = analyze_pic(data.pic[i])
+            data.at[i, 'image'] = image
+            data.loc[i, 'face_num'] = face_ret
             if face_ret == 1:
-                data.age[i] = age_ret[0]
-                data.gender[i] = gender_ret[0]
-                data.age_conf[i] = agePreds[0]
-                data.gender_conf[i] = genderPreds[0]
-                data.face[i] = faceBoxes[0]
-                data.points[i] = points
+                data.loc[i, 'age'] = age_ret[0]
+                data.loc[i, 'gender'] = gender_ret[0]
+                data.at[i, 'age_conf'] = agePreds[0]
+                data.at[i, 'gender_conf'] = genderPreds[0]
+                data.at[i, 'face'] = faceBoxes[0]
+                data.at[i, 'points'] = points
         #user profile page exists, but theres no profile picture
         except HTTPError:
             continue
         except Exception as e:
+            import pdb, traceback, sys
+            extype, value, tb = sys.exc_info()
+            traceback.print_exc()
+            pdb.post_mortem(tb)
             print("")
             print("index: "+str(i))
             print(str(e))
