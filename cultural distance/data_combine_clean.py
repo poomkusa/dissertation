@@ -114,6 +114,16 @@ for i in range(len(data)):
 indexNames = data[ (data['cult_dst_4'].isnull()) & (data['cult_dst_6'].isnull()) ].index
 data.drop(indexNames , inplace=True)
 data.isna().any()
+
+#calculate great-circle distance
+from geopy.distance import great_circle
+#create a table of lat/long for each country
+latlong = pd.read_csv("/home/poom/Desktop/phd/Dissertation/airbnb/cultural distance/latlong.csv")
+latlong['gc_dst'] = np.nan
+italy = (latlong.loc[latlong['country']=='Italy', 'lat'].iloc[0], latlong.loc[latlong['country']=='Italy', 'long'].iloc[0])
+for i in range(len(latlong)):
+    latlong.loc[i,'gc_dst'] = great_circle(italy, (latlong.lat[i],latlong.long[i])).km
+data = data.merge(latlong, on='country', how='left')
 # data.to_pickle("/home/poom/Desktop/PhD/Dissertation/airbnb/cultural distance/data.pkl")
  
 # =============================================================================
