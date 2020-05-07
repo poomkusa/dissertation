@@ -88,7 +88,6 @@ def analyze_pic(url):
     return frame, face_num, age_ret, gender_ret, agePreds, genderPreds, faceBoxes, points
 
 #initialize ML var
-faceHaar="/home/poom/Desktop/haarcascade_frontalface_default.xml"
 ageProto="/home/poom/Desktop//age_deploy.prototxt"
 ageModel="/home/poom/Desktop/age_net.caffemodel"
 genderProto="/home/poom/Desktop/gender_deploy.prototxt"
@@ -98,7 +97,6 @@ MODEL_MEAN_VALUES=(78.4263377603, 87.7689143744, 114.895847746)
 ageList=['(0-2)', '(4-6)', '(8-12)', '(15-20)', '(25-32)', '(38-43)', '(48-53)', '(60-100)']
 genderList=['Male','Female']
 
-facecascade = cv2.CascadeClassifier(faceHaar)
 ageNet=cv2.dnn.readNet(ageModel,ageProto)
 genderNet=cv2.dnn.readNet(genderModel,genderProto)
 
@@ -114,13 +112,13 @@ padding=20
 with progressbar.ProgressBar(max_value=len(data)) as bar:
     for i in range(len(data)):
         bar.update(i)
-        #skip if the user profile page no longer exists
-        if(str(data.iloc[i,data.columns.get_loc("pic")])=="nan"):
-            continue
-        #skip if there's no profile pic
-        if(data.pic[i]=="https://a0.muscache.com/defaults/user_pic-225x225.png?v=3"):
-            continue
         try:
+            #skip if the user profile page no longer exists
+            if(str(data.iloc[i,data.columns.get_loc("pic")])=="nan"):
+                continue
+            #skip if there's no profile pic
+            if(data.pic[i]=="https://a0.muscache.com/defaults/user_pic-225x225.png?v=3"):
+                continue
             image, face_ret, age_ret, gender_ret, agePreds, genderPreds, faceBoxes, points = analyze_pic(data.pic[i])
             data.at[i, 'image'] = image
             data.loc[i, 'face_num'] = face_ret
@@ -136,9 +134,9 @@ with progressbar.ProgressBar(max_value=len(data)) as bar:
             continue
         except Exception as e:
             import pdb, traceback, sys
-            extype, value, tb = sys.exc_info()
-            traceback.print_exc()
-            pdb.post_mortem(tb)
+            # extype, value, tb = sys.exc_info()
+            # traceback.print_exc()
+            # pdb.post_mortem(tb)
             print("")
             print("index: "+str(i))
             print(str(e))

@@ -20,7 +20,7 @@ Created on Sun Mar 29 20:41:12 2020
 # https://www.kaggle.com/timesler/guide-to-mtcnn-in-facenet-pytorch
 # https://awesomeopensource.com/project/timesler/facenet-pytorch
 
-# preprocessing
+# image preprocessing
 # https://www.pyimagesearch.com/2017/12/04/how-to-create-a-deep-learning-dataset-using-google-images/
 
 # face alignment
