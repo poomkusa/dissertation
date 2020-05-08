@@ -233,12 +233,16 @@ temp = data.loc[data['sentiment_pl'].isnull(),]
 #separate data to batch run in colab
 data = pd.read_pickle("/home/poom/Desktop/PhD/Dissertation/airbnb/cultural distance/data.pkl")
     
-d1 = data[0:80000][['listing_id', 'id', 'pic']]
-d2 = data[80000:160000][['listing_id', 'id', 'pic']]
-d3 = data[160000:240000][['listing_id', 'id', 'pic']]
-d4 = data[240000:320000][['listing_id', 'id', 'pic']]
-d5 = data[320000:400000][['listing_id', 'id', 'pic']]
-d6 = data[400000:len(data)][['listing_id', 'id', 'pic']]
+d1 = data[0:50000][['listing_id', 'id', 'pic']]
+d2 = data[50000:100000][['listing_id', 'id', 'pic']]
+d3 = data[100000:150000][['listing_id', 'id', 'pic']]
+d4 = data[150000:200000][['listing_id', 'id', 'pic']]
+d5 = data[200000:250000][['listing_id', 'id', 'pic']]
+d6 = data[250000:300000][['listing_id', 'id', 'pic']]
+d7 = data[300000:350000][['listing_id', 'id', 'pic']]
+d8 = data[350000:400000][['listing_id', 'id', 'pic']]
+d9 = data[400000:450000][['listing_id', 'id', 'pic']]
+d10 = data[450000:len(data)][['listing_id', 'id', 'pic']]
 
 d1.reset_index(inplace=True)
 d2.reset_index(inplace=True)
@@ -246,8 +250,21 @@ d3.reset_index(inplace=True)
 d4.reset_index(inplace=True)
 d5.reset_index(inplace=True)
 d6.reset_index(inplace=True)
+d7.reset_index(inplace=True)
+d8.reset_index(inplace=True)
+d9.reset_index(inplace=True)
+d10.reset_index(inplace=True)
 
+d1.to_pickle("/home/poom/Desktop/d1.pkl")
+d2.to_pickle("/home/poom/Desktop/d2.pkl")
+d3.to_pickle("/home/poom/Desktop/d3.pkl")
+d4.to_pickle("/home/poom/Desktop/d4.pkl")
+d5.to_pickle("/home/poom/Desktop/d5.pkl")
 d6.to_pickle("/home/poom/Desktop/d6.pkl")
+d7.to_pickle("/home/poom/Desktop/d7.pkl")
+d8.to_pickle("/home/poom/Desktop/d8.pkl")
+d9.to_pickle("/home/poom/Desktop/d9.pkl")
+d10.to_pickle("/home/poom/Desktop/d10.pkl")
 
 # =============================================================================
 # combine listing level and review level data
@@ -268,16 +285,20 @@ reg_dta = pd.merge(left=data, right=df, left_on='listing_id', right_on='id')
 # temp.to_pickle("/home/poom/Desktop/PhD/Dissertation/airbnb/cultural distance/data_final.pkl")
 
 #listing level merge
-temp = data[['listing_id', 'cult_dst_4', 'cult_dst_6']]
+temp = data[['listing_id','cult_dst_4','cult_dst_6','gc_dst','sentiment_pl','sentiment_sj']]
 temp = temp.groupby('listing_id', as_index=False).mean()
 reg_dta = pd.merge(left=df, right=temp, left_on='id', right_on='listing_id')
+
+feather.write_dataframe(reg_dta, "/home/poom/Desktop/review.feather")
+feather.write_dataframe(reg_dta, "/home/poom/Desktop/listing.feather")
 
 # =============================================================================
 # regression
 # ============================================================================= 
 import statsmodels.formula.api as sm
-reg = sm.ols("logit_perf ~ host_is_superhost + cult_dst_6 + host_is_superhost*cult_dst_6+ host_listings_count \
-             + number_of_reviews + price + bathrooms + bedrooms + review_scores_location", 
+reg_dta['super_x_dst'] = reg_dta['host_is_superhost']*reg_dta['cult_dst_6']
+reg = sm.ols("logit_perf ~ host_is_superhost + host_is_superhost:cult_dst_6 \
+             + host_listings_count + number_of_reviews + price + bathrooms + bedrooms + review_scores_location", 
              data=reg_dta, missing='drop').fit()
 result = reg.summary()
 result

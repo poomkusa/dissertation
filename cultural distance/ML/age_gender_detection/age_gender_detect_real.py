@@ -130,7 +130,7 @@ with progressbar.ProgressBar(max_value=len(data)) as bar:
         except HTTPError:
             continue
         except Exception as e:
-            import pdb, traceback, sys
+            # import pdb, traceback, sys
             # extype, value, tb = sys.exc_info()
             # traceback.print_exc()
             # pdb.post_mortem(tb)
@@ -139,5 +139,5 @@ with progressbar.ProgressBar(max_value=len(data)) as bar:
             print(str(e))
             print("=============================================================================")
 # ==================================================================================================================
-        if(i%100==0 | i==len(data)-1):
+        if(i%100==0 or i==len(data)-1):
             data.to_pickle("/home/poom/Desktop/dummy.pkl")
