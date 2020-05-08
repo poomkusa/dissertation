@@ -36,25 +36,20 @@ def detect_face_mtcnn(frame):
     imgtest1 = frame.copy()
     # convert to RGB, because OpenCV uses BGR -> mtcnn uses RGB
     imgplot = cv2.cvtColor(imgtest1, cv2.COLOR_BGR2RGB)
-    # create the detector, using default weights
-    detector = MTCNN()
     # detect faces in the image
     resultList = detector.detect_faces(imgplot)
     
     faceBoxes=[]
     points=[]
-    if(len(resultList)!=1):
-        return len(resultList), faceBoxes, points
-    # plot each box
-    for face in resultList:
+    if(len(resultList)==1):
         # draw the box
-        x, y, width, height = face['box']
+        x, y, width, height = resultList[0]['box']
         x1=x
         y1=y
         x2=x+width
         y2=y+height
         faceBoxes.append([x1,y1,x2,y2])
-        points.append(face['keypoints'])
+        points.append(resultList[0]['keypoints'])
     return len(resultList), faceBoxes, points
     
 def analyze_pic(url):
@@ -69,22 +64,22 @@ def analyze_pic(url):
     #predict only when theres only one face in the pic
     if (face_num==1):
         #crop only the face part
-        for faceBox in faceBoxes:
-            face = frame[max(0,faceBox[1]-padding):min(faceBox[3]+padding,frame.shape[0]-1),
-                         max(0,faceBox[0]-padding):min(faceBox[2]+padding, frame.shape[1]-1)]
-            
-            #preprocessing
-            blob=cv2.dnn.blobFromImage(face, 1.0, (227,227), MODEL_MEAN_VALUES, swapRB=False)
-            
-            genderNet.setInput(blob)
-            genderPreds=genderNet.forward()
-            gender=genderList[genderPreds[0].argmax()]
-            gender_ret.append(gender)
-    
-            ageNet.setInput(blob)
-            agePreds=ageNet.forward()
-            age=ageList[agePreds[0].argmax()]
-            age_ret.append(age)
+        faceBox = faceBoxes[0]
+        face = frame[max(0,faceBox[1]-padding):min(faceBox[3]+padding,frame.shape[0]-1),
+                     max(0,faceBox[0]-padding):min(faceBox[2]+padding, frame.shape[1]-1)]
+        
+        #preprocessing
+        blob=cv2.dnn.blobFromImage(face, 1.0, (227,227), MODEL_MEAN_VALUES, swapRB=False)
+        
+        genderNet.setInput(blob)
+        genderPreds=genderNet.forward()
+        gender=genderList[genderPreds[0].argmax()]
+        gender_ret.append(gender)
+
+        ageNet.setInput(blob)
+        agePreds=ageNet.forward()
+        age=ageList[agePreds[0].argmax()]
+        age_ret.append(age)
     return frame, face_num, age_ret, gender_ret, agePreds, genderPreds, faceBoxes, points
 
 #initialize ML var
@@ -99,8 +94,10 @@ genderList=['Male','Female']
 
 ageNet=cv2.dnn.readNet(ageModel,ageProto)
 genderNet=cv2.dnn.readNet(genderModel,genderProto)
+# create the detector, using default weights
+detector = MTCNN()
 
-data["image"] = ""
+# data["image"] = ""
 data["face_num"] = np.nan
 data["age"] = np.nan
 data["gender"] = np.nan
@@ -120,7 +117,7 @@ with progressbar.ProgressBar(max_value=len(data)) as bar:
             if(data.pic[i]=="https://a0.muscache.com/defaults/user_pic-225x225.png?v=3"):
                 continue
             image, face_ret, age_ret, gender_ret, agePreds, genderPreds, faceBoxes, points = analyze_pic(data.pic[i])
-            data.at[i, 'image'] = image
+            # data.at[i, 'image'] = image
             data.loc[i, 'face_num'] = face_ret
             if face_ret == 1:
                 data.loc[i, 'age'] = age_ret[0]

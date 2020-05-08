@@ -79,8 +79,6 @@ def detect_face_mtcnn(frame):
     imgtest1 = frame.copy()
     # convert to RGB, because OpenCV uses BGR -> mtcnn uses RGB
     imgplot = cv2.cvtColor(imgtest1, cv2.COLOR_BGR2RGB)
-    # create the detector, using default weights
-    detector = MTCNN()
     # detect faces in the image
     resultList = detector.detect_faces(imgplot)
     
@@ -173,6 +171,8 @@ genderList=['Male','Female']
 facecascade = cv2.CascadeClassifier(faceHaar)
 ageNet=cv2.dnn.readNet(ageModel,ageProto)
 genderNet=cv2.dnn.readNet(genderModel,genderProto)
+# create the detector, using default weights
+detector = MTCNN()
 
 data["face_num"] = np.nan
 data["age"] = np.nan

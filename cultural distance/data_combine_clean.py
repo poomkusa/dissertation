@@ -83,7 +83,6 @@ data['country'] = np.where(data['country']=="Russian Federation", 'Russia', data
 freq = data['country'].value_counts(dropna=False)
 freq2 = data['country'].str.lower().value_counts(dropna=False)
 
-
 #calculate cultural distance
 data['cult_dst_4'] = np.nan
 data['cult_dst_6'] = np.nan
@@ -211,7 +210,44 @@ data['sentiment_sj'] = np.where(data['sentiment_sj'].isnull(), data['subjectivit
 del data['polarity']
 del data['subjectivity']
 
-data.to_pickle("/home/poom/Desktop/PhD/Dissertation/airbnb/cultural distance/data_nlp.pkl")
+# data.to_pickle("/home/poom/Desktop/PhD/Dissertation/airbnb/cultural distance/data_nlp.pkl")
+
+#combine data with nlp
+data = pd.read_pickle("/home/poom/Desktop/PhD/Dissertation/airbnb/cultural distance/data.pkl")
+nlp = pd.read_pickle("/home/poom/Desktop/PhD/Dissertation/airbnb/cultural distance/data_nlp.pkl")
+data['unique'] = data['listing_id'].astype(str) + "-" + data['id'].astype(str)
+nlp['unique'] = nlp['listing_id'].astype(str) + "-" + nlp['id'].astype(str)
+freq1 = data['unique'].value_counts(dropna=False)
+freq2 = nlp['unique'].value_counts(dropna=False)
+len(set(data['unique'])-set(nlp['unique']))
+del data['polarity']
+del data['subjectivity']
+nlp = nlp[['langEnsemble','translation','sentiment_pl','sentiment_sj','unique']]
+data = data.merge(nlp, on='unique', how='left')
+temp = data.loc[data['sentiment_pl'].isnull(),]
+# data.to_pickle("/home/poom/Desktop/data.pkl")
+
+# =============================================================================
+# ML
+# =============================================================================
+#separate data to batch run in colab
+data = pd.read_pickle("/home/poom/Desktop/PhD/Dissertation/airbnb/cultural distance/data.pkl")
+    
+d1 = data[0:80000][['listing_id', 'id', 'pic']]
+d2 = data[80000:160000][['listing_id', 'id', 'pic']]
+d3 = data[160000:240000][['listing_id', 'id', 'pic']]
+d4 = data[240000:320000][['listing_id', 'id', 'pic']]
+d5 = data[320000:400000][['listing_id', 'id', 'pic']]
+d6 = data[400000:len(data)][['listing_id', 'id', 'pic']]
+
+d1.reset_index(inplace=True)
+d2.reset_index(inplace=True)
+d3.reset_index(inplace=True)
+d4.reset_index(inplace=True)
+d5.reset_index(inplace=True)
+d6.reset_index(inplace=True)
+
+d6.to_pickle("/home/poom/Desktop/d6.pkl")
 
 # =============================================================================
 # combine listing level and review level data
