@@ -266,13 +266,60 @@ d8.to_pickle("/home/poom/Desktop/d8.pkl")
 d9.to_pickle("/home/poom/Desktop/d9.pkl")
 d10.to_pickle("/home/poom/Desktop/d10.pkl")
 
+#combine the data
+d1 = pd.read_pickle("C:/Users/ThisPC/Desktop/result_d1.pkl")
+d2 = pd.read_pickle("C:/Users/ThisPC/Desktop/result_d2.pkl")
+d3 = pd.read_pickle("C:/Users/ThisPC/Desktop/result_d3.pkl")
+d4 = pd.read_pickle("C:/Users/ThisPC/Desktop/result_d4.pkl")
+d5 = pd.read_pickle("C:/Users/ThisPC/Desktop/result_d5.pkl")
+d6 = pd.read_pickle("C:/Users/ThisPC/Desktop/result_d6.pkl")
+d7 = pd.read_pickle("C:/Users/ThisPC/Desktop/result_d7.pkl")
+d8 = pd.read_pickle("C:/Users/ThisPC/Desktop/result_d8.pkl")
+d9 = pd.read_pickle("C:/Users/ThisPC/Desktop/result_d9.pkl")
+d10 = pd.read_pickle("C:/Users/ThisPC/Desktop/result_d10.pkl")
+df = pd.concat([d1, d2, d3, d4, d5, d6, d7, d8, d9, d10])
+df = df.set_index('index')
+data['id'].equals(df['id'])
+df = df[['face_num','age','gender','age_conf','gender_conf','face','points']]
+data = pd.concat([data, df], axis=1)
+
+# =============================================================================
+# final cleaning
+# =============================================================================
+data=data[['listing_id','id','date','reviewer_id','reviewer_name','country','cult_dst_4','cult_dst_6','gc_dst','comments','translation','sentiment_pl','sentiment_sj','bayes_class','bayes_prob','pic','age','gender']]
+#transform age
+data['age'] = np.where(data['age']=='(0-2)', 1, data['age'])
+data['age'] = np.where(data['age']=='(4-6)', 5, data['age'])
+data['age'] = np.where(data['age']=='(8-12)', 10, data['age'])
+data['age'] = np.where(data['age']=='(15-20)', 17.5, data['age'])
+data['age'] = np.where(data['age']=='(25-32)', 28.5, data['age'])
+data['age'] = np.where(data['age']=='(38-43)', 40.5, data['age'])
+data['age'] = np.where(data['age']=='(48-53)', 50.5, data['age'])
+data['age'] = np.where(data['age']=='(60-100)', 80, data['age'])
+#remove duplicate id
+data.drop_duplicates(subset='id', keep="first", inplace=True)
+#convert auto generated review to n/a
+freq = data['translation'].value_counts(dropna=False)
+data['sentiment_pl'] = np.where(data['translation'].str.contains('This is an automated posting.', na=False), np.nan, data['sentiment_pl'])
+data['bayes_class'] = np.where(data['translation'].str.contains('This is an automated posting.', na=False), np.nan, data['bayes_class'])
+
+data.reset_index(inplace=True, drop=True )
+data.to_pickle("C:/Users/ThisPC/Desktop/data_mini.pkl")
+
+#add each cultural dimensions
+data = pd.read_pickle("D:/PhD/Dissertation/airbnb/cultural distance/data_mini.pkl")
+hofstede = pd.read_csv('D:/PhD/Dissertation/airbnb/cultural distance/hofstede.csv')
+del hofstede['dim_num']
+data = data.merge(hofstede, on='country', how='left')
+data.to_pickle("C:/Users/ThisPC/Desktop/data_mini.pkl")
+
 # =============================================================================
 # combine listing level and review level data
 # =============================================================================
 # import listing level data
 import feather
 # feather.write_dataframe(df, "path/to/file")
-df = feather.read_dataframe("/home/poom/Desktop/PhD/Dissertation/airbnb/cultural distance/listing_clean.feather")
+df = feather.read_dataframe("C:/Users/ThisPC/Desktop/listing_clean.feather")
 # check datatype of all columns
 for (columnName, columnData) in df.iteritems():
     print('Colunm Name : ', columnName, 'Type: ', type(columnData.values[0]))
@@ -280,17 +327,28 @@ for (columnName, columnData) in df.iteritems():
 ##review level merge
 data=data.rename(columns = {'id':'review_id'})
 reg_dta = pd.merge(left=data, right=df, left_on='listing_id', right_on='id')
+del reg_dta['bayes_prob']
 # found duplicate reviews, they are the same house but have different listing id
 # some reviews are automated message when host cancel the booking
 # temp.to_pickle("/home/poom/Desktop/PhD/Dissertation/airbnb/cultural distance/data_final.pkl")
 
 #listing level merge
-temp = data[['listing_id','cult_dst_4','cult_dst_6','gc_dst','sentiment_pl','sentiment_sj']]
+temp = data[['listing_id','cult_dst_4','cult_dst_6','power_distance','individualism','masculinity',
+             'uncertainty_avoidance','LT_orientation','indulgence','gc_dst','sentiment_pl','sentiment_sj','age']].copy()
+temp['age'] = pd.to_numeric(temp['age'])
 temp = temp.groupby('listing_id', as_index=False).mean()
+#use only first 7 reviews
+temp2 = data[['listing_id','sentiment_pl','sentiment_sj']]
+freq = temp2['listing_id'].value_counts(dropna=False)
+temp2 = temp2.groupby('listing_id').head(7)
+temp2 = temp2.groupby('listing_id', as_index=False).mean()
+temp2 = temp2[['sentiment_pl','sentiment_sj']]
+temp2.columns = ['sentiment_pl_7', 'sentiment_sj_7']
+temp = pd.concat([temp, temp2], axis=1)
 reg_dta = pd.merge(left=df, right=temp, left_on='id', right_on='listing_id')
 
 feather.write_dataframe(reg_dta, "/home/poom/Desktop/review.feather")
-feather.write_dataframe(reg_dta, "/home/poom/Desktop/listing.feather")
+feather.write_dataframe(reg_dta, "C:/Users/ThisPC/Desktop/listing.feather")
 
 # =============================================================================
 # regression
