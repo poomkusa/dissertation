@@ -313,6 +313,25 @@ del hofstede['dim_num']
 data = data.merge(hofstede, on='country', how='left')
 data.to_pickle("C:/Users/ThisPC/Desktop/data_mini.pkl")
 
+# #remove 25-32 age class
+# indexNames = data[(data['age']==28.5)].index
+# data.drop(indexNames , inplace=True)
+
+#add VADER sentiment
+data = pd.read_pickle("D:/PhD/Dissertation/airbnb/cultural distance/data_mini.pkl")
+data['unique'] = data['listing_id'].astype(str) + "-" + data['id'].astype(str)
+temp = data[['unique','translation']].copy()
+indexNames = temp[ (temp['translation'].isnull()) ].index
+temp.drop(indexNames , inplace=True)
+import nltk
+nltk.download('vader_lexicon')
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
+sia = SentimentIntensityAnalyzer()
+temp['compound'] = temp['translation'].apply(lambda x: sia.polarity_scores(x)['compound'])
+data = pd.merge(left=data, right=temp[['unique','compound']], left_on='unique', right_on='unique', how='left')
+data['compound'] = np.where(data['translation'].str.contains('This is an automated posting.', na=False), np.nan, data['compound'])
+data.to_pickle("C:/Users/ThisPC/Desktop/data_mini.pkl")
+
 # =============================================================================
 # combine listing level and review level data
 # =============================================================================
@@ -325,8 +344,11 @@ for (columnName, columnData) in df.iteritems():
     print('Colunm Name : ', columnName, 'Type: ', type(columnData.values[0]))
 
 ##review level merge
+df = feather.read_dataframe("C:/Users/ThisPC/Desktop/listing_long_clean.feather")
+df = df[['id_date','review_scores_rating','review_scores_accuracy','review_scores_value','number_of_reviews','price']]
+data['id_date'] = data['listing_id'].apply(str) + "-" + data['date'].str[0:4] + data['date'].str[5:7]
 data=data.rename(columns = {'id':'review_id'})
-reg_dta = pd.merge(left=data, right=df, left_on='listing_id', right_on='id')
+reg_dta = pd.merge(left=data, right=df, left_on='id_date', right_on='id_date', how='left')
 del reg_dta['bayes_prob']
 # found duplicate reviews, they are the same house but have different listing id
 # some reviews are automated message when host cancel the booking

@@ -17,7 +17,6 @@ save(result, file="/media/poom/Backup/PhD/Dissertation/airbnb/cognitive load/2-t
 load("/media/poom/Backup/PhD/Dissertation/airbnb/cognitive load/2-time_series/raw_combined.Rda")
 
 sort(colnames(result))
-#loop through each column and return a column name with NA > 30000
 result <- select(result, availability_30, host_is_superhost, id, host_id, date,
                  host_response_rate, host_since, host_identity_verified, host_listings_count, 
                  review_scores_rating, review_scores_location,
