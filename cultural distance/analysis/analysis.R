@@ -1,13 +1,15 @@
-# library(dplyr)
+library(dplyr)
 library(feather)
-library(MASS)
-library(car)
-library(lmtest)
-library(caret)
-library(mctest)
+# library(MASS)
+# library(car)
+# library(lmtest)
+# library(caret)
+# library(mctest)
 
 listing_dta <- read_feather("D:/PhD/Dissertation/airbnb/cultural distance/listing.feather")
-review_dta <- read_feather("D:/PhD/Dissertation/airbnb/cultural distance/review.feather")
+review_dta <- read_feather("D:/PhD/Dissertation/airbnb/cultural distance/review_long.feather")
+#remove rows with translated comments
+# review_dta <- review_dta[(review_dta$comments==review_dta$translation),]
 # review_dta$gender <- ifelse(review_dta$gender=='Male', TRUE, review_dta$gender)
 # review_dta$gender <- ifelse(review_dta$gender=='Female', FALSE, review_dta$gender)
 # library(foreign)
@@ -55,8 +57,10 @@ waldtest(est, vcov=vcovHC)
 # review level
 #################################################################################
 #dv = rating distance
-avg <- mean(review_dta$compound, na.rm=TRUE)
-review_dta$rating_dst <- review_dta$compound - avg
+temp <- aggregate(select(review_dta, compound), list(review_dta$listing_id), mean, na.rm=TRUE)
+temp <- rename(temp, avg_sentiment=compound)
+review_dta <- merge(x=review_dta, y=temp, by.x="listing_id", by.y="Group.1", all.x = TRUE)
+review_dta$rating_dst <- abs(review_dta$compound.x - review_dta$compound.y)
 est <- lm(rating_dst ~ power_distance + individualism + masculinity + uncertainty_avoidance
           + LT_orientation + indulgence
           + dst + gc_dst + age + gender
@@ -96,22 +100,33 @@ summary(mod_1)
 
 #dv = sentiment
 review_dta$dst <- abs(review_dta$uncertainty_avoidance-75)
+#-----
 review_dta$vader_sent <- ifelse(review_dta$compound>=0.05, 1, NA)
 review_dta$vader_sent <- ifelse(review_dta$compound<=-0.05, 0, review_dta$vader_sent)
+#-----
 # review_dta$sent_sign <- ifelse(review_dta$rating_dst > 0, 'pos', NA)
 # review_dta$sent_sign <- ifelse(review_dta$rating_dst < 0, 'neg', review_dta$rating_dst_sign)
+#-----
 # review_dta$bayes_dummy <- review_dta$bayes_class == "pos"
 # review_dta$bayes_dummy <- as.numeric(review_dta$bayes_dummy)
+#-----
+# temp <- aggregate(select(review_dta, compound), list(review_dta$listing_id), sd, na.rm=TRUE) #abiguity
+# temp <- rename(temp, sd_sentiment=compound)
+# review_dta <- merge(x=review_dta, y=temp, by.x="listing_id", by.y="Group.1", all.x = TRUE)
+#-----
 # review_dta$word_count <- sapply(review_dta$translation, function(x) wordcount(x))
+#-----
 library("bife") #https://cran.r-project.org/web/packages/bife/vignettes/howto.html
 mod_1 <- bife(vader_sent ~ power_distance + individualism + masculinity + uncertainty_avoidance
               + LT_orientation + indulgence
-              + gc_dst + age + gender
-              + review_scores_rating + individualism:review_scores_rating
-              # + review_scores_accuracy + individualism:review_scores_accuracy
-              + LT_orientation:gc_dst
-              + power_distance:age
-              # price + power_distance:price
+              # + gc_dst
+              # + gender
+              # + review_scores_rating + individualism:review_scores_rating
+              + review_scores_accuracy + individualism:review_scores_accuracy
+              # + sd_sentiment + individualism:sd_sentiment
+              # + LT_orientation:gc_dst
+              # + age + power_distance:age
+              # + price + power_distance:price
               | listing_id, data=review_dta)
               # | listing_id, data=review_dta, bias_corr="no")
 summary(mod_1)
