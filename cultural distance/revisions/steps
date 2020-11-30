@@ -1,0 +1,9 @@
+listing_clean_201909.R
+
+listing_clean_long.R
+
+data_combine_clean.py
+-#remove rows with unwanted comments
+-#convert auto generated review to n/a
+
+remove review with listing id that doesnt exist in listing_clean+listing_long_clean, then save file in milan_reviews_clean.csv
