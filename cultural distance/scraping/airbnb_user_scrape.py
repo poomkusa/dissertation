@@ -10,10 +10,13 @@ import numpy as np
 from bs4 import BeautifulSoup
 import requests
 import browsercookie
+import re
+import sys
+sys.setrecursionlimit(10000)
 #import time
 #from random import gauss
 
-data = pd.read_csv("/home/poom/Desktop/reviewer_id.csv")
+data = pd.read_csv("/home/poom/Desktop/1.csv")
 data["country"] = np.nan
 data["pic"] = np.nan
 data["face_num"] = np.nan
@@ -21,10 +24,10 @@ data["gender"] = np.nan
 data["age"] = np.nan
 #data = data.iloc[0:5]
 #create a selector based on class name in the website HTML
-selector = 'div._910j1c5'
-picture_selector = 'img._1mgxxu3'
+# selector = 'div._1ax9t0a'
+picture_selector = 'img._9ofhsl'
 #row number to begin with
-i=516300
+i=0
 #limit number of times the code try to access not found pages
 first_time = True
 error_count = 0
@@ -40,10 +43,12 @@ while i!=rownum:
         r = requests.get(url, cookies=cj)
         #แปลงเป็น type bs4.BeautifulSoup
         html_page = BeautifulSoup(r.text, "html.parser")
-        country = html_page.select_one(selector)
+        # country = html_page.select_one(selector)
+        country = html_page.find_all(text=re.compile('Lives in'))
         pic = html_page.select(picture_selector)
         if(not isinstance(data.iloc[i,data.columns.get_loc("country")], str)):
-            data.iloc[i,data.columns.get_loc("country")] = country.text
+            # data.iloc[i,data.columns.get_loc("country")] = country.text
+            data.iloc[i,data.columns.get_loc("country")] = country[0]
         if(not isinstance(data.iloc[i,data.columns.get_loc("pic")], str)):
             data.iloc[i,data.columns.get_loc("pic")] = pic[0]["src"]
 #        delay = gauss(6, 2)
@@ -52,7 +57,7 @@ while i!=rownum:
         error_count = 0
         first_time = True
         if(i%100==0):
-            data.to_pickle("/home/poom/Desktop/dummy.pkl")
+            data.to_pickle("/home/poom/Desktop/1.pkl")
     #stop and move on the next loop after 5 errors    
     except Exception as e:
         error_count+=1
@@ -64,7 +69,7 @@ while i!=rownum:
         first_time = False
         print("---"+str(e))
 #data.to_pickle("/home/poom/Desktop/dummy.pkl")
-#data = pd.read_pickle("/home/poom/Desktop/dummy.pkl")
+#data = pd.read_pickle("/home/poom/Desktop/1.pkl")
 
 #for finding the last scraped row when resuming the scrape
 data.index[data['country'].isnull() == False]
@@ -73,9 +78,8 @@ data.iloc[320997:321011]
 
 
 
-
 #check and combine all scraped data
-df1 = pd.read_pickle("/home/poom/Desktop/df.pkl")
+df1 = pd.read_pickle("/home/poom/Desktop/1.pkl")
 df2 = pd.read_pickle("/home/poom/Desktop/6.pkl")
 df = df1
 df["compare"] = df2["country"]
