@@ -11,8 +11,8 @@ from bs4 import BeautifulSoup
 import requests
 import browsercookie
 import re
-import sys
-sys.setrecursionlimit(10000)
+#import sys
+#sys.setrecursionlimit(10000)
 #import time
 #from random import gauss
 
@@ -44,11 +44,11 @@ while i!=rownum:
         #แปลงเป็น type bs4.BeautifulSoup
         html_page = BeautifulSoup(r.text, "html.parser")
         # country = html_page.select_one(selector)
-        country = html_page.find_all(text=re.compile('Lives in'))
+        country = html_page.find(text=re.compile('Lives in'))
         pic = html_page.select(picture_selector)
         if(not isinstance(data.iloc[i,data.columns.get_loc("country")], str)):
             # data.iloc[i,data.columns.get_loc("country")] = country.text
-            data.iloc[i,data.columns.get_loc("country")] = country[0]
+            data.iloc[i,data.columns.get_loc("country")] = country
         if(not isinstance(data.iloc[i,data.columns.get_loc("pic")], str)):
             data.iloc[i,data.columns.get_loc("pic")] = pic[0]["src"]
 #        delay = gauss(6, 2)
