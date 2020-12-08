@@ -11,6 +11,7 @@ from bs4 import BeautifulSoup
 import requests
 import browsercookie
 import re
+import feather
 #import sys
 #sys.setrecursionlimit(10000)
 #import time
@@ -57,7 +58,8 @@ while i!=rownum:
         error_count = 0
         first_time = True
         if(i%100==0):
-            data.to_pickle("/home/poom/Desktop/1.pkl")
+            #data.to_pickle("/home/poom/Desktop/1.pkl")
+            feather.write_dataframe(data, "/home/poom/Desktop/1.feather")
     #stop and move on the next loop after 5 errors    
     except Exception as e:
         error_count+=1
