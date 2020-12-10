@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from bs4 import BeautifulSoup
 import requests
-import browsercookie
+import browsercookie #theres a newer browsercookie3
 import re
 import feather
 import psutil
