@@ -28,8 +28,14 @@ m1 <- glmer(vader_sent ~ individualism*review_scores_accuracy
             + (1| listing_id)
             , data = review_dta, family = binomial)
 summary(m1)
-saveRDS(m1, "D:/PhD/Dissertation/airbnb/cultural distance/mixed effect logistic reg/m1.rds")
-my_model <- readRDS("D:/PhD/Dissertation/airbnb/cultural distance/mixed effect logistic reg/m1.rds")
+saveRDS(m1, "D:/PhD/Dissertation/airbnb/cultural distance/multi-level modeling/m1.rds")
+my_model <- readRDS("D:/PhD/Dissertation/airbnb/cultural distance/multi-level modeling/m1.rds")
+
+#export to stata
+export <- select(review_dta, vader_sent, review_scores_accuracy, individualism, power_distance, masculinity,
+                      uncertainty_avoidance, LT_orientation, indulgence, listing_id, country)
+library(foreign)
+write.dta(export, "C:/Users/ThisPC/Desktop/mydata.dta")
 
 #################################################################################
 # multi-level modeling sample

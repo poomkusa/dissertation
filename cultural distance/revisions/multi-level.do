@@ -1,0 +1,3 @@
+use "C:\Users\ThisPC\Desktop\mydata.dta", clear
+melogit vader_sent c.individualism##c.review_scores_accuracy power_distance masculinity uncertainty_avoidance LT_orientation indulgence, nofvlabel|| listing_id:
+melogit vader_sent c.individualism##c.review_scores_accuracy power_distance masculinity uncertainty_avoidance LT_orientation indulgence, nofvlabel|| listing_id: individualism power_distance masculinity uncertainty_avoidance LT_orientation indulgence, cov(unstruct)
