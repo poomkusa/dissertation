@@ -84,6 +84,7 @@ freq = data['country'].value_counts(dropna=False)
 freq2 = data['country'].str.lower().value_counts(dropna=False)
 
 #calculate cultural distance
+#hofstede
 data['cult_dst_4'] = np.nan
 data['cult_dst_6'] = np.nan
 def cult_dst (visitor, dim):
@@ -113,6 +114,19 @@ for i in range(len(data)):
 indexNames = data[ (data['cult_dst_4'].isnull()) & (data['cult_dst_6'].isnull()) ].index
 data.drop(indexNames , inplace=True)
 data.isna().any()
+#schwartz
+data['schwartz_dst'] = np.nan
+#retrieve a table of distance
+hofstede = pd.read_csv('/home/poom/Desktop/schwartz.csv')
+hofstede['country'] = hofstede['country'].str.strip().str.lower()
+var = [0.0908708228,	0.1639822152	, 0.1919787342,	0.0246385918	, 0.2763518354, 0.1520717563, 0.0716698576]
+host = hofstede.iloc[hofstede.index[hofstede['country']=='italy'], 1:8].values.flatten().tolist()
+data.reset_index(drop=True, inplace=True)
+data['temp'] = np.where(data['country'].str.lower().isin(hofstede['country']), True, False)
+for i in range(len(data)):
+    if data.temp[i]:
+        data.schwartz_dst[i] = cult_dst (data.country[i].lower(), 7)
+
 
 #calculate great-circle distance
 from geopy.distance import great_circle
