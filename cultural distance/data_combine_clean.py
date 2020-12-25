@@ -116,8 +116,7 @@ data.drop(indexNames , inplace=True)
 data.isna().any()
 #schwartz
 data['schwartz_dst'] = np.nan
-#retrieve a table of distance
-hofstede = pd.read_csv('/home/poom/Desktop/schwartz.csv')
+hofstede = pd.read_csv('D:/PhD/Dissertation/airbnb/cultural distance/schwartz.csv')
 hofstede['country'] = hofstede['country'].str.strip().str.lower()
 var = [0.0908708228,	0.1639822152	, 0.1919787342,	0.0246385918	, 0.2763518354, 0.1520717563, 0.0716698576]
 host = hofstede.iloc[hofstede.index[hofstede['country']=='italy'], 1:8].values.flatten().tolist()
@@ -126,6 +125,37 @@ data['temp'] = np.where(data['country'].str.lower().isin(hofstede['country']), T
 for i in range(len(data)):
     if data.temp[i]:
         data.schwartz_dst[i] = cult_dst (data.country[i].lower(), 7)
+#globe
+data['globe1_dst'] = np.nan
+hofstede = pd.read_csv('D:/PhD/Dissertation/airbnb/cultural distance/globe1.csv')
+hofstede['country'] = hofstede['country'].str.strip().str.lower()
+var = [0.360503278, 0.211280567, 0.203881333, 0.183653609, 0.21453894, 0.16442334, 0.584759576, 0.136189441, 0.139187594]
+host = hofstede.iloc[hofstede.index[hofstede['country']=='italy'], 1:10].values.flatten().tolist()
+data.reset_index(drop=True, inplace=True)
+data['temp'] = np.where(data['country'].str.lower().isin(hofstede['country']), True, False)
+for i in range(len(data)):
+    if data.temp[i]:
+        data.globe1_dst[i] = cult_dst (data.country[i].lower(), 9)
+data['globe2_dst'] = np.nan
+hofstede = pd.read_csv('D:/PhD/Dissertation/airbnb/cultural distance/globe2.csv')
+hofstede['country'] = hofstede['country'].str.strip().str.lower()
+var = [0.375933771, 0.265198149, 0.161550916, 0.248150664, 0.129028394, 0.318575258, 0.164253454, 0.236447185, 0.412399143]
+host = hofstede.iloc[hofstede.index[hofstede['country']=='italy'], 1:10].values.flatten().tolist()
+data.reset_index(drop=True, inplace=True)
+data['temp'] = np.where(data['country'].str.lower().isin(hofstede['country']), True, False)
+for i in range(len(data)):
+    if data.temp[i]:
+        data.globe2_dst[i] = cult_dst (data.country[i].lower(), 9)
+#wvs
+wvs = pd.read_csv('D:/PhD/Dissertation/airbnb/cultural distance/wvs.csv')
+wvs['country'] = wvs['country'].str.strip().str.lower()
+sse_h = 0.815306558740057
+tsr_h = 0.382565436
+wvs['wvs_dst'] = np.sqrt( np.square(wvs['sse']-sse_h) + np.square(wvs['tsr']-tsr_h) )
+wvs = wvs[['country','wvs_dst']]
+wvs=wvs.rename(columns = {'country':'key'})
+data['key'] = data['country'].str.lower()
+data = pd.merge(left=data, right=wvs, left_on='key', right_on='key', how='left')
 
 
 #calculate great-circle distance
@@ -369,8 +399,9 @@ del reg_dta['bayes_prob']
 # temp.to_pickle("/home/poom/Desktop/PhD/Dissertation/airbnb/cultural distance/data_final.pkl")
 
 #listing level merge
-temp = data[['listing_id','cult_dst_4','cult_dst_6','power_distance','individualism','masculinity',
-             'uncertainty_avoidance','LT_orientation','indulgence','gc_dst','sentiment_pl','sentiment_sj','age']].copy()
+temp = data[['listing_id','cult_dst_4','cult_dst_6','schwartz_dst','globe1_dst','globe2_dst','wvs_dst',
+             'power_distance','individualism','masculinity','uncertainty_avoidance','LT_orientation',
+             'indulgence','gc_dst','sentiment_pl','sentiment_sj','age']].copy()
 temp['age'] = pd.to_numeric(temp['age'])
 temp = temp.groupby('listing_id', as_index=False).mean()
 #use only first 7 reviews
