@@ -331,6 +331,34 @@ tab_model(
   col.order = c("p", "stat", "est", "std.se", "se", "std.est")
 )
 
+############################################################################
+### export to spss for multi-level
+############################################################################
+setwd("D:/PhD/Dissertation/airbnb/cognitive load/1-cross_section/airbnb_data/")
+filename = list.files(pattern="*.csv")
+library(dplyr)
+library(plyr)
+readdata <- function(filename) {
+  df <- select(read.csv(filename), id, neighbourhood_cleansed)
+  df$city <- filename
+  return(df)
+}
+nhb <- do.call(rbind.fill, lapply(filename, readdata))
+nhb$city <- gsub("\\..*", "", nhb$city)
+
+nhb$key <- paste(nhb$id, nhb$city)
+result$key <- paste(result$id, result$city)
+temp <- merge(result, nhb, by.x ="key", by.y="key", all.x=TRUE)
+
+temp$cities <- gsub("_.*$", "", temp$city.x)
+temp$states <- gsub(".*_", "", temp$city.x)
+keeps <- c("id.x", "logit_perf", "host_is_superhost", "density_nbh", "host_listings_count", "number_of_reviews",
+           "price", "bathrooms", "bedrooms", "beds", "tv", "wifi", "ac", "fridge", "toiletry", "accommodates",
+           "cities", "states", "neighbourhood_cleansed")
+temp <- temp[keeps]
+library(haven)
+write_sav(temp, "C:/Users/ThisPC/Desktop/spss_dat.sav")
+
 ###########################################################################################
 # check regression assumption
 ###########################################################################################

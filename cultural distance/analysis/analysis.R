@@ -6,8 +6,8 @@ library(feather)
 # library(caret)
 # library(mctest)
 
-listing_dta <- read_feather("D:/PhD/Dissertation/airbnb/cultural distance/listing.feather")
-review_dta <- read_feather("D:/PhD/Dissertation/airbnb/cultural distance/review_long.feather")
+listing_dta <- read_feather("D:/PhD/Dissertation/airbnb/cultural distance/listing_final.feather")
+review_dta <- read_feather("D:/PhD/Dissertation/airbnb/cultural distance/review_long_final.feather")
 #remove rows with translated comments
 # review_dta <- review_dta[(review_dta$comments==review_dta$translation),]
 # review_dta$gender <- ifelse(review_dta$gender=='Male', TRUE, review_dta$gender)
@@ -38,9 +38,9 @@ review_dta[listing_dta == ""] <- NA
 # listing_dta$host_x_dst <- listing_dta$host_is_superhost*listing_dta$cult_dst_6
 # listing_dta$host_x_dst_x_age <- listing_dta$host_is_superhost*listing_dta$cult_dst_6*listing_dta$age
 listing_dta$dst <- abs(listing_dta$uncertainty_avoidance-75) #italy UAI=75
-listing_dta$host_x_dst <- listing_dta$host_is_superhost*listing_dta$dst
+listing_dta$host_x_dst <- listing_dta$host_is_superhost*listing_dta$globe1_dst
 #reg (can remove age if also remove dst)
-est <- lm(logit_perf ~ host_is_superhost + dst + host_x_dst
+est <- lm(logit_perf ~ host_is_superhost + globe1_dst + host_x_dst
           # + gc_dst
           + age
           + host_listings_count + number_of_reviews + price + bathrooms + bedrooms + review_scores_location
@@ -56,6 +56,15 @@ waldtest(est, vcov=vcovHC)
 #################################################################################
 # review level
 #################################################################################
+#descriptive stats grouped by disconfirmation level
+review_dta$disconfirmation <- 10 - review_dta$review_scores_accuracy
+review_dta$disconfirmation_dummy <- ifelse(review_dta$disconfirmation==0, FALSE, TRUE)
+summary(review_dta[ which(review_dta$disconfirmation_dummy == TRUE), ]$individualism)
+summary(review_dta[ which(review_dta$disconfirmation_dummy == FALSE), ]$individualism)
+res <- t.test(review_dta[ which(review_dta$disconfirmation_dummy == TRUE), ]$individualism, 
+              review_dta[ which(review_dta$disconfirmation_dummy == FALSE), ]$individualism, 
+              var.equal = TRUE)
+
 #dv = rating distance
 temp <- aggregate(select(review_dta, compound), list(review_dta$listing_id), mean, na.rm=TRUE)
 temp <- rename(temp, avg_sentiment=compound)

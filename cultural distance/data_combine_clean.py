@@ -156,6 +156,43 @@ wvs = wvs[['country','wvs_dst']]
 wvs=wvs.rename(columns = {'country':'key'})
 data['key'] = data['country'].str.lower()
 data = pd.merge(left=data, right=wvs, left_on='key', right_on='key', how='left')
+#mahalanobis distance
+#6 dim
+def mahalanobis(x=None, data=None, cov=None):
+    x_mu = x - hofstede.iloc[hofstede.index[hofstede['country']=='Italy'], 1:7].values.flatten().tolist()
+    if not cov:
+        cov = np.cov(data.values.T)
+    inv_covmat = np.linalg.inv(cov)
+    left = np.dot(x_mu, inv_covmat)
+    mahal = np.dot(left, x_mu.T)
+    return mahal.diagonal()
+hofstede = pd.read_csv('D:/PhD/Dissertation/airbnb/cultural distance/hofstede.csv')
+hofstede = hofstede[hofstede.columns[range(7)]]
+hofstede = hofstede.dropna()
+hofstede = hofstede.reset_index(drop=True)
+hofstede['mahalanobis'] = mahalanobis(x=hofstede[hofstede.columns[-6:]], data=hofstede[hofstede.columns[-6:]],)
+hofstede = hofstede[['country','mahalanobis']]
+hofstede = hofstede.rename(columns = {'country':'key'})
+data = pd.merge(left=data, right=hofstede, left_on='country', right_on='key', how='left')
+del data['key']
+#4 dim
+def mahalanobis(x=None, data=None, cov=None):
+    x_mu = x - hofstede.iloc[hofstede.index[hofstede['country']=='Italy'], 1:5].values.flatten().tolist()
+    if not cov:
+        cov = np.cov(data.values.T)
+    inv_covmat = np.linalg.inv(cov)
+    left = np.dot(x_mu, inv_covmat)
+    mahal = np.dot(left, x_mu.T)
+    return mahal.diagonal()
+hofstede = pd.read_csv('D:/PhD/Dissertation/airbnb/cultural distance/hofstede.csv')
+hofstede = hofstede[hofstede.columns[range(5)]]
+hofstede = hofstede.dropna()
+hofstede = hofstede.reset_index(drop=True)
+hofstede['mahalanobis2'] = mahalanobis(x=hofstede[hofstede.columns[-4:]], data=hofstede[hofstede.columns[-4:]],)
+hofstede = hofstede[['country','mahalanobis2']]
+hofstede = hofstede.rename(columns = {'country':'key'})
+data = pd.merge(left=data, right=hofstede, left_on='country', right_on='key', how='left')
+del data['key']
 
 
 #calculate great-circle distance
@@ -427,4 +464,35 @@ reg = sm.ols("logit_perf ~ host_is_superhost + host_is_superhost:cult_dst_6 \
              data=reg_dta, missing='drop').fit()
 result = reg.summary()
 result
+
+# =============================================================================
+# make 2 datasets match
+# ============================================================================= 
+df1= feather.read_dataframe("C:/Users/ThisPC/Desktop/review_long.feather")
+df2= feather.read_dataframe("C:/Users/ThisPC/Desktop/listing.feather")
+#select used variables then drop all rows with na
+df1 = df1[['listing_id', 'power_distance', 'individualism', 'masculinity', 'uncertainty_avoidance',
+           'LT_orientation', 'indulgence', 'compound', 'review_scores_accuracy']]
+df1.isna().sum()
+df1 = df1.dropna()
+df2 = df2[['id', 'host_is_superhost', 'host_listings_count', 'number_of_reviews', 'price', 'bathrooms',
+           'bedrooms', 'review_scores_location', 'logit_perf', 'globe1_dst', 'age']]
+df2.isna().sum()
+df2 = df2.dropna()
+#remove rows in review data with neutral sentiment
+df1 = df1[(df1['compound']>=0.05) | (df1['compound']<=-0.05)]
+#export to csv and check in excel
+freq1 = df1['listing_id'].value_counts(dropna=False)
+freq2 = df2['id'].value_counts(dropna=False)
+freq1.to_csv(r'C:/Users/ThisPC/Desktop/temp.csv')
+freq2.to_csv(r'C:/Users/ThisPC/Desktop/temp2.csv')
+#check and remove in python
+(~df2['id'].isin(df1['listing_id'])).sum()
+df2 = df2[df2['id'].isin(df1['listing_id'])]
+(~df1['listing_id'].isin(df2['id'])).sum()
+df1 = df1[df1['listing_id'].isin(df2['id'])]
+
+
+
+
 
