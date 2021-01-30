@@ -6,7 +6,7 @@ library(feather)
 # library(caret)
 # library(mctest)
 
-listing_dta <- read_feather("D:/PhD/Dissertation/airbnb/cultural distance/listing_final.feather")
+listing_dta <- read_feather("D:/PhD/Dissertation/airbnb/cultural distance/revisions/milan/listing.feather")
 review_dta <- read_feather("D:/PhD/Dissertation/airbnb/cultural distance/review_long_final.feather")
 #remove rows with translated comments
 # review_dta <- review_dta[(review_dta$comments==review_dta$translation),]
@@ -37,10 +37,17 @@ review_dta[listing_dta == ""] <- NA
 # listing_dta$dstH <- ifelse(listing_dta$cult_dst_6 < (mean-(0.25*sd)), FALSE, listing_dta$dstH)
 # listing_dta$host_x_dst <- listing_dta$host_is_superhost*listing_dta$cult_dst_6
 # listing_dta$host_x_dst_x_age <- listing_dta$host_is_superhost*listing_dta$cult_dst_6*listing_dta$age
+listing_dta$uncertainty_avoidance <- abs(listing_dta$uncertainty_avoidance-75) #italy UAI=75
+listing_dta$power_distance <- abs(listing_dta$power_distance-50)
+listing_dta$individualism <- abs(listing_dta$individualism-76)
+listing_dta$masculinity <- abs(listing_dta$masculinity-70)
+listing_dta$LT_orientation <- abs(listing_dta$LT_orientation-61)
+listing_dta$indulgence <- abs(listing_dta$indulgence-30)
 listing_dta$dst <- abs(listing_dta$uncertainty_avoidance-75) #italy UAI=75
 listing_dta$host_x_dst <- listing_dta$host_is_superhost*listing_dta$globe1_dst
 #reg (can remove age if also remove dst)
 est <- lm(logit_perf ~ host_is_superhost + globe1_dst + host_x_dst
+          + power_distance + individualism + masculinity + uncertainty_avoidance + LT_orientation + indulgence
           # + gc_dst
           + age
           + host_listings_count + number_of_reviews + price + bathrooms + bedrooms + review_scores_location

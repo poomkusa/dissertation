@@ -339,7 +339,9 @@ filename = list.files(pattern="*.csv")
 library(dplyr)
 library(plyr)
 readdata <- function(filename) {
-  df <- select(read.csv(filename), id, neighbourhood_cleansed)
+  df <- read.csv(filename)
+  df$neighbourhood_cleansed <- as.character(df$neighbourhood_cleansed)
+  df <- select(df, id, neighbourhood_cleansed)
   df$city <- filename
   return(df)
 }
@@ -358,6 +360,15 @@ keeps <- c("id.x", "logit_perf", "host_is_superhost", "density_nbh", "host_listi
 temp <- temp[keeps]
 library(haven)
 write_sav(temp, "C:/Users/ThisPC/Desktop/spss_dat.sav")
+
+#neighbourhood
+library(haven)
+dta = read_sav("D:/PhD/Dissertation/airbnb/cognitive load/1-cross_section/spss_dat.sav")
+
+dta[which(dta$states=="ca"), 'neighbourhood_cleansed']
+t.first <- dta[match(unique(dta$cities), dta$cities),]
+dta <- within(dta, { count <- ave(neighbourhood_cleansed, cities, FUN=function(x) length(unique(x)))})
+freq <- dta[match(unique(dta$cities), dta$cities),]
 
 ###########################################################################################
 # check regression assumption

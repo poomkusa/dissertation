@@ -468,14 +468,15 @@ result
 # =============================================================================
 # make 2 datasets match
 # ============================================================================= 
-df1= feather.read_dataframe("C:/Users/ThisPC/Desktop/review_long.feather")
-df2= feather.read_dataframe("C:/Users/ThisPC/Desktop/listing.feather")
+df1 = feather.read_dataframe("D:/PhD/Dissertation/airbnb/cultural distance/review_long.feather")
+df2 = feather.read_dataframe("D:/PhD/Dissertation/airbnb/cultural distance/listing_final.feather")
 #select used variables then drop all rows with na
 df1 = df1[['listing_id', 'power_distance', 'individualism', 'masculinity', 'uncertainty_avoidance',
-           'LT_orientation', 'indulgence', 'compound', 'review_scores_accuracy']]
+           'LT_orientation', 'indulgence', 'compound', 'review_scores_accuracy', 'review_id',date','id_date',
+           'reviewer_id', 'country', 'cult_dst_4', 'cult_dst_6']]
 df1.isna().sum()
 df1 = df1.dropna()
-df2 = df2[['id', 'host_is_superhost', 'host_listings_count', 'number_of_reviews', 'price', 'bathrooms',
+df2 = df2[['id_date', 'host_is_superhost', 'host_listings_count', 'number_of_reviews', 'price', 'bathrooms',
            'bedrooms', 'review_scores_location', 'logit_perf', 'globe1_dst', 'age']]
 df2.isna().sum()
 df2 = df2.dropna()
@@ -491,8 +492,3 @@ freq2.to_csv(r'C:/Users/ThisPC/Desktop/temp2.csv')
 df2 = df2[df2['id'].isin(df1['listing_id'])]
 (~df1['listing_id'].isin(df2['id'])).sum()
 df1 = df1[df1['listing_id'].isin(df2['id'])]
-
-
-
-
-
